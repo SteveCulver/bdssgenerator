@@ -5,8 +5,9 @@ from htmlnode import HTMLNode
 class TestHtmlNode(unittest.TestCase):
     def test_to_html_ne(self):
         node = HTMLNode()
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(NotImplementedError) as e:
             node.to_html()
+        self.assertEqual(str(e.exception), "Child classes will override this method to render themselves as HTML")
 
     # Default returns ""
     def test_props_to_html_default_none(self):
