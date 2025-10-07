@@ -1,5 +1,5 @@
 
-from htmlnode import HTMLNode
+from src.htmlnode import HTMLNode
 
 # Handles the nesting of HTML nodes inside of one another.
 # Any node that is not a leaf node (e.g. it has children) is a parent node
