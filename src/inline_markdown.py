@@ -1,6 +1,8 @@
 from textnode import TextNode, TextType
 import re
 
+
+
 # Take a list of TextNode objects
 # For any node with type TEXT, split its string into a sequence of:
 # - plain text nodes
@@ -94,6 +96,20 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 split_nodes.append(TextNode(sections[i], text_type))
         new_nodes.extend(split_nodes)
     return new_nodes
+
+def text_to_textnodes(text):
+    # Make a new text node from the text, for processing
+    nodes = [TextNode(text, TextType.TEXT)]
+    # 1) Protect code first
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    # 2) Extract media/links so their text isn't styled
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    # 3) Apply styles last
+    # Bolds before italics, because bold is double asterisk, and italics can also be a single asterisk (not implemented)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    return nodes    
 
 # Create a function extract_markdown_images(text) that takes raw markdown text and returns a list of tuples.
 # Each tuple should contain the alt text and the URL of any markdown images.
