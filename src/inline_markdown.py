@@ -1,23 +1,42 @@
 from textnode import TextNode, TextType
 import re
 
+# Take a list of TextNode objects
+# For any node with type TEXT, split its string into a sequence of:
+# - plain text nodes
+# - image nodes
+# - link nodes
+# Leave non-TEXT nodes unchanged
+# Skip empty text nodes
 def split_nodes_image(old_nodes):
     new_nodes = []
     for old_node in old_nodes:
+        # Leave non-TEXT nodes unchanged
         if old_node.text_type != TextType.TEXT:
             new_nodes.append(old_node)
             continue
+        # Grab the original text
         original_text = old_node.text
+        # Use the extractor to return any markdown images
         images = extract_markdown_images(original_text)
+        # If images returns 0, there are no images, so it's a plain text node.
+        # Just append it
         if len(images) == 0:
             new_nodes.append(old_node)
             continue
+        # extract_markdown_images returns a list of tuples
+        # e.g. [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
         for image in images:
+            # Split the original text with the image as the delimiter, at most once
+            # e.g. This string is before the image ![rick roll](https://i.imgur.com/aKaOqIh.gif) this string is after the image
             sections = original_text.split(f"![{image[0]}]({image[1]})", 1)
+            # If 
             if len(sections) != 2:
                 raise ValueError("invalid markdown, image section not closed")
+            # If there is any text before, emit it as a plain text node
             if sections[0] != "":
                 new_nodes.append(TextNode(sections[0], TextType.TEXT))
+            # Emit the image node using the alt and url
             new_nodes.append(
                 TextNode(
                     image[0],
@@ -25,7 +44,9 @@ def split_nodes_image(old_nodes):
                     image[1],
                 )
             )
+            # Set the original_text to everything after the delimiter
             original_text = sections[1]
+        # If there is more original text, emit it as a text node
         if original_text != "":
             new_nodes.append(TextNode(original_text, TextType.TEXT))
     return new_nodes
