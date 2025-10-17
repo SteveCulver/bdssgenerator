@@ -1,9 +1,10 @@
 import unittest
 
-from block_markdown import (
+from src.block_markdown import (
     markdown_to_blocks,
     block_to_block_type,
-    BlockType
+    BlockType,
+    markdown_to_html_node
 )
 
 class TestBlockMarkdown(unittest.TestCase):
@@ -177,7 +178,6 @@ This is a paragraph with  trailing spaces.
     def test_block_type_code_two_lines(self):
         block = "```\n```"
         returned_type = block_to_block_type(block)
-        print(returned_type)
         assert returned_type == BlockType.CODE
      
     def test_block_type_code_missing_closing_fence(self):
@@ -225,4 +225,85 @@ This is a paragraph with  trailing spaces.
         with self.assertRaises(ValueError) as e:
             block_to_block_type(block)
 
-        self.assertEqual(str(e.exception), "markdown block is None or a blank string")        
+        self.assertEqual(str(e.exception), "markdown block is None or a blank string")
+
+    def test_paragraph(self):
+        md = """
+This is a simple paragraph with `code` and **bold**.
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is a simple paragraph with <code>code</code> and <b>bold</b>.</p></div>",
+        )
+
+    def test_heading_h1(self):
+        md = """
+# Big Title
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(html, "<div><h1>Big Title</h1></div>")
+
+    def test_heading_h3_inline(self):
+        md = """
+### Mid Title with _italics_
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(html, "<div><h3>Mid Title with <i>italics</i></h3></div>")
+
+    def test_code_block(self):
+        md = """
+```
+This _is_ **raw** code
+line2
+```
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><pre><code>This _is_ **raw** code\nline2\n</code></pre></div>",
+        )
+
+    def test_blockquote(self):
+        md = """
+> A wise quote
+> with `code` and **bold**
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><blockquote>A wise quote\nwith <code>code</code> and <b>bold</b></blockquote></div>",
+        )
+
+# python
+    def test_unordered_list(self):
+        md = """
+- one item
+- two `code`
+- three **bold**
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>one item</li>\n<li>two <code>code</code></li>\n<li>three <b>bold</b></li>\n</ul></div>",
+        )
+
+# python
+    def test_ordered_list(self):
+        md = """
+1. first
+2. second _italic_
+3. third **bold**
+"""
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>first</li>\n<li>second <i>italic</i></li>\n<li>third <b>bold</b></li>\n</ol></div>",
+        )

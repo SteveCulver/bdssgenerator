@@ -1,4 +1,4 @@
-from textnode import TextNode, TextType
+from src.textnode import TextNode, TextType
 import re
 
 
@@ -97,18 +97,27 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         new_nodes.extend(split_nodes)
     return new_nodes
 
+def _assert_all_textnodes(stage, nodes):
+    for n in nodes:
+        if not isinstance(n, TextNode):
+            raise TypeError(f"{stage} produced non-TextNode: {type(n)}: {n}")
+
 def text_to_textnodes(text):
-    # Make a new text node from the text, for processing
     nodes = [TextNode(text, TextType.TEXT)]
-    # 1) Protect code first
     nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
-    # 2) Extract media/links so their text isn't styled
+    #_assert_all_textnodes("after CODE", nodes)
+
     nodes = split_nodes_image(nodes)
+    #_assert_all_textnodes("after IMAGE", nodes)
+
     nodes = split_nodes_link(nodes)
-    # 3) Apply styles last
-    # Bolds before italics, because bold is double asterisk, and italics can also be a single asterisk (not implemented)
+    #_assert_all_textnodes("after LINK", nodes)
+
     nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    #_assert_all_textnodes("after BOLD", nodes)
+
     nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    #_assert_all_textnodes("after ITALIC", nodes)
     return nodes    
 
 # Create a function extract_markdown_images(text) that takes raw markdown text and returns a list of tuples.
