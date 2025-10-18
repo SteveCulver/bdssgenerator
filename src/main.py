@@ -49,7 +49,39 @@ def extract_title(markdown):
         raise Exception("no h1 header found")
     return header
 
+    #generate_page("content/index.md", "template.html", "public/index.html")
+    #generate_pages_recursive("content", "template.html", "public")
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    dir_path_content = os.path.abspath(dir_path_content)
+    if not os.path.exists(dir_path_content):
+        raise ValueError(f"dir_path_content: '{dir_path_content}' doesn't exist")
+    template_path = os.path.abspath(template_path)
+    if not os.path.exists(template_path):
+        raise ValueError(f"template_path: '{template_path}' doesn't exist")
+    dest_dir_path = os.path.abspath(dest_dir_path)
+   
+    # Crawl every entry in the content directory
+    dir_contents = os.listdir(dir_path_content)
+    for c in dir_contents:
+        path = os.path.join(dir_path_content, c)
+        # For each markdown file found, generate a new .html file using the same template.html.
+        if os.path.isfile(path):
+            file_and_ext_list = os.path.splitext(path)
+            if len(file_and_ext_list) == 2 and file_and_ext_list[1] == ".md":
+                output_file = os.path.join(dest_dir_path, "index.html")
+                generate_page(path, template_path, output_file)
+        elif os.path.isdir(path):
+            print(f"{path} is a directory and needs to be processed, recursively")
+            curr_path = Path(path)
+            directory = curr_path.name
+            new_dest_dir_path = os.path.join(dest_dir_path, directory)
+            #print(f"{dest_dir_path}, directory name should be: '{directory}'")
+            #print(f"target directory should be {os.path.join(dest_dir_path, directory)}")
+            generate_pages_recursive(path, template_path, new_dest_dir_path)
 
+    # The generated pages should be written to the public directory in the same directory structure.
+
+    # Change your main function to use generate_pages_recursive instead of generate_page. You should generate a page for every markdown file in the content directory and write the results to the public directory.
 
 def generate_page(from_path, template_path, dest_path):
     print(f"Generating page from '{from_path}' to '{dest_path}' using '{template_path}'")
@@ -93,6 +125,7 @@ def generate_page(from_path, template_path, dest_path):
 def main():
     # Delete anything in public and copy all static files from static to public
     copy_all_contents("static", "public")
-    generate_page("content/index.md", "template.html", "public/index.html")
+    #generate_page("content/index.md", "template.html", "public/index.html")
+    generate_pages_recursive("content", "template.html", "public")
 
 main()
